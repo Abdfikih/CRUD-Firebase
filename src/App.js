@@ -7,6 +7,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase
 function App() {
   const [newName, setNewName] = useState("");
   const [newAge, setNewAge] = useState(0);
+  const [dataLoaded, setDataLoaded] = useState(false); // State untuk menandakan apakah data telah dimuat atau belum
 
   const [users, setUsers] = useState([]);
   const usersCollectionRef = collection(db, "users");
@@ -32,10 +33,11 @@ function App() {
     const getUsers = async () => {
       const data = await getDocs(usersCollectionRef);
       setUsers(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      setDataLoaded(true); // Mengubah state `dataLoaded` menjadi `true` setelah data dimuat
     };
 
     getUsers();
-  }, [usersCollectionRef]);
+  }, []);
 
   return (
     <div className="App bg-gray-200 min-h-screen p-4">
@@ -62,34 +64,35 @@ function App() {
           Create User
         </button>
       </div>
-      {users.map((user) => {
-        return (
-          <div key={user.id} className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-semibold">{user.name}</h1>
-              <p className="text-gray-500">Age: {user.age}</p>
+      {dataLoaded && // Hanya akan merender data jika `dataLoaded` adalah `true`
+        users.map((user) => {
+          return (
+            <div key={user.id} className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center">
+              <div>
+                <h1 className="text-xl font-semibold">{user.name}</h1>
+                <p className="text-gray-500">Age: {user.age}</p>
+              </div>
+              <div>
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600"
+                  onClick={() => {
+                    updateUser(user.id, user.age);
+                  }}
+                >
+                  Increase Age
+                </button>
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  onClick={() => {
+                    deleteUser(user.id);
+                  }}
+                >
+                  Delete User
+                </button>
+              </div>
             </div>
-            <div>
-              <button
-                className="bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600"
-                onClick={() => {
-                  updateUser(user.id, user.age);
-                }}
-              >
-                Increase Age
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                onClick={() => {
-                  deleteUser(user.id);
-                }}
-              >
-                Delete User
-              </button>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 }
